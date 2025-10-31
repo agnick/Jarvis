@@ -7,7 +7,7 @@ struct JarvisApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootTabView(appServicesFactory: appServicesFactory)
         }
     }
     
