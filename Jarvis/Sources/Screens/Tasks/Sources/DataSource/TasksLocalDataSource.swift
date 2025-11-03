@@ -43,7 +43,7 @@ final class TasksLocalDataSourceImpl: TasksLocalDataSource {
         }
         
         let fetchDescriptor = FetchDescriptor<TaskItem>(
-            sortBy: [SortDescriptor(\.title, order: .forward)]
+            sortBy: [SortDescriptor(\.dueDate, order: .forward)]
         )
         
         do {

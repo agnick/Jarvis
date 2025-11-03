@@ -161,7 +161,7 @@ struct TasksView<ViewModel: TasksViewModel>: View {
                 Text(task.title)
                 
                 if let date = task.dueDate {
-                    Text("Due: \(date.formatted(date: .abbreviated, time: .omitted))")
+                    Text("Due: \(date.formatted(date: .abbreviated, time: .shortened))")
                         .foregroundColor(.secondary)
                 }
                 
