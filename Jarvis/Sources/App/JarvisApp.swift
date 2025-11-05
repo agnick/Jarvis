@@ -3,6 +3,12 @@ import SwiftUI
 @main
 struct JarvisApp: App {
     
+    // MARK: - Init
+    
+    init() {
+        HotkeyManager.shared.registerHotkey()
+    }
+    
     // MARK: - Body
     
     var body: some Scene {
