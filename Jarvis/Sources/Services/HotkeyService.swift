@@ -16,7 +16,7 @@ final class HotkeyServiceImpl: HotkeyService {
         let modifierFlags: UInt32 = UInt32(cmdKey)
         let keyCode: UInt32 = UInt32(kVK_Space)
 
-        var hotKeyID = EventHotKeyID(signature: OSType("QLCH".fourCharCodeValue), id: UInt32(1))
+        let hotKeyID = EventHotKeyID(signature: OSType("QLCH".fourCharCodeValue), id: UInt32(1))
 
         RegisterEventHotKey(keyCode, modifierFlags, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
 
