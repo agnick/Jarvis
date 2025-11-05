@@ -23,6 +23,6 @@ final class AppServicesFactory: ObservableObject {
     }()
 
     lazy var quickLauncherCoordinator: QuickLauncherCoordinator = {
-        QuickLauncherCoordinatorImpl()
+        QuickLauncherCoordinatorImpl(viewModel: QuickLauncherViewModelImpl())
     }()
 }
