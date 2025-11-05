@@ -17,4 +17,12 @@ final class AppServicesFactory: ObservableObject {
     lazy var tasksFactory: TasksFactory = {
         TasksFactoryImpl(swiftDataContextManager: swiftDataContextManager)
     }()
+    
+    lazy var hotkeyService: HotkeyService = {
+        HotkeyServiceImpl()
+    }()
+
+    lazy var quickLauncherCoordinator: QuickLauncherCoordinator = {
+        QuickLauncherCoordinatorImpl()
+    }()
 }

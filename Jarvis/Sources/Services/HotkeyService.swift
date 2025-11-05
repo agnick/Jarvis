@@ -1,31 +1,24 @@
 import AppKit
 import Carbon.HIToolbox
-import SwiftUI
 
-final class HotkeyManager {
-    static let shared = HotkeyManager()
+protocol HotkeyService {
+    func registerHotkey(action: @escaping () -> Void)
+}
 
+final class HotkeyServiceImpl: HotkeyService {
     private var hotKeyRef: EventHotKeyRef?
     private var eventHandler: EventHandlerRef?
+    private var action: (() -> Void)?
 
-    func registerHotkey() {
-        // Cmd + Space
+    func registerHotkey(action: @escaping () -> Void) {
+        self.action = action
+
         let modifierFlags: UInt32 = UInt32(cmdKey)
         let keyCode: UInt32 = UInt32(kVK_Space)
 
-        let hotKeyID = EventHotKeyID(
-            signature: OSType("QLCH".fourCharCodeValue),
-            id: UInt32(1)
-        )
+        var hotKeyID = EventHotKeyID(signature: OSType("QLCH".fourCharCodeValue), id: UInt32(1))
 
-        RegisterEventHotKey(
-            keyCode,
-            modifierFlags,
-            hotKeyID,
-            GetApplicationEventTarget(),
-            0,
-            &hotKeyRef
-        )
+        RegisterEventHotKey(keyCode, modifierFlags, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
 
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
@@ -34,7 +27,7 @@ final class HotkeyManager {
 
         InstallEventHandler(
             GetApplicationEventTarget(),
-            { (nextHandler, theEvent, userData) -> OSStatus in
+            { (_, theEvent, userData) -> OSStatus in
                 var hkCom = EventHotKeyID()
                 GetEventParameter(
                     theEvent,
@@ -45,28 +38,30 @@ final class HotkeyManager {
                     nil,
                     &hkCom
                 )
-                
-                if hkCom.id == 1 {
-                    DispatchQueue.main.async {
-                        QuickLauncherController.shared.toggleLauncher()
-                    }
+
+                if hkCom.id == 1,
+                   let userData = userData {
+                    let instance = Unmanaged<HotkeyServiceImpl>
+                        .fromOpaque(userData)
+                        .takeUnretainedValue()
+                    instance.action?()
                 }
-                
                 return noErr
             },
             1,
             &eventType,
-            nil,
+            UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()),
             &eventHandler
         )
+
     }
 }
 
 private extension String {
     var fourCharCodeValue: FourCharCode {
         var result: FourCharCode = 0
-        for character in utf16 {
-            result = (result << 8) + FourCharCode(character)
+        for char in utf16 {
+            result = (result << 8) + FourCharCode(char)
         }
         return result
     }
