@@ -1,30 +1,66 @@
+import AVFoundation
 import SwiftUI
 
 protocol QuickLauncherCoordinator {
     func toggleLauncher()
 }
 
-final class QuickLauncherCoordinatorImpl: QuickLauncherCoordinator {
-    private var window: NSWindow?
+final class QuickLauncherCoordinatorImpl<ViewModel: QuickLauncherViewModel>: QuickLauncherCoordinator {
+    // MARK: - Initialization
+    
+    init(viewModel: ViewModel) {
+        self.viewModel = viewModel
+    }
+    
+    // MARK: - Toggle
 
     func toggleLauncher() {
         if let window, window.isVisible {
             window.orderOut(nil)
-        } else {
-            let contentView = QuickLauncherView()
-            let hosting = NSHostingController(rootView: contentView)
-            let window = NSWindow(contentViewController: hosting)
-            window.styleMask = [.titled, .fullSizeContentView]
-            window.titleVisibility = .hidden
-            window.isReleasedWhenClosed = false
-            window.level = .floating
-            window.backgroundColor = .clear
-            window.isOpaque = false
-            window.center()
-            self.window = window
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let view = QuickLauncherView(viewModel: viewModel)
+        let hostingController = NSHostingController(rootView: view)
+
+        let window = NSWindow(
+            contentViewController: hostingController
+        )
+        window.styleMask = [.titled, .fullSizeContentView]
+        window.titlebarAppearsTransparent = true
+        window.isReleasedWhenClosed = false
+        window.level = .floating
+        window.makeKeyAndOrderFront(nil)
+        window.title = "Hey, Jarvis!"
+        window.backgroundColor = .clear
+        window.isOpaque = false
+        NSApp.activate(ignoringOtherApps: true)
+
+        self.window = window
+        
+        jarvisClipThat()
+    }
+    
+    // MARK: - Private properties
+    
+    private var window: NSWindow?
+    private let viewModel: ViewModel
+    private var player: AVAudioPlayer?
+    
+    // MARK: - Private Methods
+    
+    private func jarvisClipThat() {
+        guard let url = Bundle.main.url(forResource: "jarvis_meme", withExtension: "mp3") else {
+            print("Не найден файл jarvis_meme.mp3")
+            return
+        }
+        do {
+            player = try AVAudioPlayer(contentsOf: url)
+            player?.volume = 20.0
+            player?.play()
+            print("🎵 Jarvis clip playing!")
+        } catch {
+            print("Ошибка воспроизведения: \(error)")
         }
     }
 }
-

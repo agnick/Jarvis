@@ -1,16 +1,31 @@
 import SwiftUI
 
-struct QuickLauncherView: View {
-    @State private var command = ""
+@MainActor
+protocol QuickLauncherViewModel: ObservableObject {
+    var command: String { get set }
+    func clearCommand()
+}
+
+struct QuickLauncherView<ViewModel: QuickLauncherViewModel>: View {
+    @ObservedObject var viewModel: ViewModel
 
     var body: some View {
-        VStack {
-            TextField("Enter command here...", text: $command)
+        HStack(alignment: .center, spacing: 8){
+            TextField("Enter command here...", text: $viewModel.command)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
+            
+            Button {
+                viewModel.clearCommand()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .frame(width: 16, height: 16)
         }
-        .frame(width: 500)
+        .padding(.bottom, 16)
+        .padding(.horizontal, 16)
+        .frame(width: 512, height: 64)
         .background(.ultraThinMaterial)
     }
 }
-
