@@ -4,6 +4,7 @@ import SwiftUI
 protocol QuickLauncherViewModel: ObservableObject {
     var command: String { get set }
     func clearCommand()
+    func executeCommand()
 }
 
 struct QuickLauncherView<ViewModel: QuickLauncherViewModel>: View {
@@ -13,6 +14,10 @@ struct QuickLauncherView<ViewModel: QuickLauncherViewModel>: View {
         HStack(alignment: .center, spacing: 8){
             TextField("Enter command here...", text: $viewModel.command)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
+                .onSubmit {
+                    viewModel.executeCommand()
+                }
+                .submitLabel(.search)
             
             Button {
                 viewModel.clearCommand()

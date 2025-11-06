@@ -23,6 +23,12 @@ final class AppServicesFactory: ObservableObject {
     }()
 
     lazy var quickLauncherCoordinator: QuickLauncherCoordinator = {
-        QuickLauncherCoordinatorImpl(viewModel: QuickLauncherViewModelImpl())
+        let tasksDataSource = TasksLocalDataSourceImpl(
+            container: swiftDataContextManager.container,
+            context: swiftDataContextManager.context
+        )
+
+        let commandHandler = QuickLauncherCommandHandlerImpl(tasksDataSource: tasksDataSource)
+        return QuickLauncherCoordinatorImpl(viewModel: QuickLauncherViewModelImpl(commandHandler: commandHandler))
     }()
 }
