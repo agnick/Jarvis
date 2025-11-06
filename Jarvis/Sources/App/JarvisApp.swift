@@ -2,7 +2,9 @@ import SwiftUI
 
 @main
 struct JarvisApp: App {
-    
+
+    // MARK: - Body
+
     var body: some Scene {
         WindowGroup {
             RootTabView(appServicesFactory: appServicesFactory)
@@ -16,7 +18,8 @@ struct JarvisApp: App {
                 }
         }
     }
-    
+
+    // MARK: - Private Properties
+
     @StateObject private var appServicesFactory = AppServicesFactory()
 }
-

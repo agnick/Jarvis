@@ -22,7 +22,6 @@ struct RootTabView: View {
                     Label("Focus", systemImage: "timer")
                 }
 
-            // Важно: используем конкретную реализацию VM, а не any ClipboardHistoryViewModel
             ClipboardHistoryView(viewModel: appServicesFactory.clipboardViewModelImpl)
                 .tabItem {
                     Label("Clipboard", systemImage: "doc.on.clipboard")

@@ -8,6 +8,7 @@ final class AppServicesFactory: ObservableObject {
     
     lazy var swiftDataContextManager: SwiftDataContextManager = {
         SwiftDataContextManager(models: [
+            // сюда можно добавлять новые модельки
             TaskItem.self,
             ClipboardEntry.self
         ])
@@ -27,7 +28,7 @@ final class AppServicesFactory: ObservableObject {
         QuickLauncherCoordinatorImpl(viewModel: QuickLauncherViewModelImpl())
     }()
 
-    // MARK: - Clipboard stack (SwiftData-backed)
+    // MARK: - Clipboard stack
 
     lazy var clipboardService: ClipboardHistoryService = {
         ClipboardHistoryServiceImpl(
