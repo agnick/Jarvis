@@ -22,7 +22,7 @@ struct RootTabView: View {
                     Label("Focus", systemImage: "timer")
                 }
 
-            Color.green
+            ClipboardHistoryView(viewModel: appServicesFactory.clipboardViewModelImpl)
                 .tabItem {
                     Label("Clipboard", systemImage: "doc.on.clipboard")
                 }
