@@ -3,6 +3,7 @@ import SwiftUI
 
 protocol QuickLauncherCoordinator {
     func toggleLauncher()
+    func openLauncher()
     func closeLauncher(animated: Bool)
 }
 
@@ -20,31 +21,41 @@ final class QuickLauncherCoordinatorImpl<ViewModel: QuickLauncherViewModel>: Qui
             closeLauncher(animated: true)
             return
         }
-
+        openLauncher()
+    }
+    
+    func openLauncher() {
+        if let panel, panel.isVisible {
+            return
+        }
         let view = QuickLauncherView(viewModel: viewModel)
 
         let hostingController = NSHostingController(rootView: view)
 
         let panel = QuickLauncherPanel(contentViewController: hostingController)
-        panel.styleMask = [.titled, .fullSizeContentView]
+        panel.styleMask = [.borderless, .fullSizeContentView]
         panel.titlebarAppearsTransparent = true
         panel.isReleasedWhenClosed = false
         panel.level = .floating
         panel.backgroundColor = .clear
-        panel.isOpaque = false
         panel.hasShadow = true
-        panel.title = "Hey, Jarvis!"
-        panel.becomesKeyOnlyIfNeeded = true
+        panel.makeKeyAndOrderFront(nil)
+        panel.becomesKeyOnlyIfNeeded = false
         panel.standardWindowButton(.closeButton)?.isHidden = true
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
         panel.standardWindowButton(.zoomButton)?.isHidden = true
         panel.onEscPressed = { [weak self] in
             self?.closeLauncher(animated: true) 
         }
+        let panelWidth: CGFloat = 650
+        let panelHeight: CGFloat = 256
+        panel.setFrame(NSRect(x: 0, y: 0, width: panelWidth, height: panelHeight), display: true)
+        panel.center()
 
         self.panel = panel
 
         NSApp.activate(ignoringOtherApps: true)
+        panel.makeKey()
         
         setupAnimation()
 
@@ -92,7 +103,6 @@ final class QuickLauncherCoordinatorImpl<ViewModel: QuickLauncherViewModel>: Qui
     private func setupAnimation() {
         guard let panel else { return }
         panel.alphaValue = 0
-        panel.makeKeyAndOrderFront(nil)
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.25
@@ -104,6 +114,9 @@ final class QuickLauncherCoordinatorImpl<ViewModel: QuickLauncherViewModel>: Qui
 
 final class QuickLauncherPanel: NSPanel {
     var onEscPressed: (() -> Void)?
+
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
 
     override func cancelOperation(_ sender: Any?) {
         onEscPressed?()
