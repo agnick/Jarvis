@@ -3,14 +3,18 @@ import SwiftUI
 @MainActor
 protocol TasksViewModel: ObservableObject {
     var tasks: [TaskItem] { get }
+    var sortOption: TaskSortOption { get set }
     var selectedPriority: TaskPriority? { get set }
     var tagFilter: String { get set }
     var isAddSheetPresented: Bool { get set }
-    var form: TaskFormModel { get set }
+    var currentEditingTask: TaskItem? { get }
+    var form: TaskForm { get set }
     var showErrorAlert: Bool { get set }
     var errorMessage: String { get }
     
     func addTask()
+    func editTask(_ task: TaskItem)
+    func updateTask(_ task: TaskItem)
     func deleteTask(_ task: TaskItem)
     func resetForm()
 }
@@ -41,8 +45,21 @@ struct TasksView<ViewModel: TasksViewModel>: View {
                 }
             }
             .sheet(isPresented: $viewModel.isAddSheetPresented) {
-                addTaskSheet
-                    .presentationDetents([.medium, .large])
+                TaskEditorView(
+                    form: $viewModel.form,
+                    taskToEdit: viewModel.currentEditingTask,
+                    onSave: {
+                        if let task = viewModel.currentEditingTask {
+                            viewModel.updateTask(task)
+                        } else {
+                            viewModel.addTask()
+                        }
+                    },
+                    onCancel: {
+                        viewModel.resetForm()
+                    }
+                )
+                .presentationDetents([.medium, .large])
             }
             .alert("Error", isPresented: $viewModel.showErrorAlert) {
                 Button("OK", role: .cancel) {
@@ -62,17 +79,21 @@ struct TasksView<ViewModel: TasksViewModel>: View {
     
     private var filterPanel: some View {
         HStack {
-            Picker("Priority", selection: $viewModel.selectedPriority) {
-                Text("All")
-                    .tag(TaskPriority?.none)
-                
-                ForEach(TaskPriority.allCases, id: \.self) { priority in
-                    Text(priority.rawValue)
-                        .tag(TaskPriority?.some(priority))
+            Picker("Sort", selection: $viewModel.sortOption) {
+                ForEach(TaskSortOption.allCases, id: \.self) { option in
+                    Text(option.rawValue)
                 }
             }
             .pickerStyle(MenuPickerStyle())
-                    
+            
+            Picker("Priority", selection: $viewModel.selectedPriority) {
+                Text("All").tag(TaskPriority?.none)
+                ForEach(TaskPriority.allCases, id: \.self) { priority in
+                    Text(priority.rawValue).tag(TaskPriority?.some(priority))
+                }
+            }
+            .pickerStyle(MenuPickerStyle())
+                            
             TextField("Filter by tag...", text: $viewModel.tagFilter)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
         }
@@ -96,6 +117,8 @@ struct TasksView<ViewModel: TasksViewModel>: View {
                                 .id(task.id)
                         }
                     }
+                    .listStyle(.plain)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
             }
             .onChange(of: viewModel.tasks) { _, _ in
@@ -107,49 +130,6 @@ struct TasksView<ViewModel: TasksViewModel>: View {
             .onChange(of: viewModel.tagFilter) { _, _ in
                 scrollToTop(proxy: proxy)
             }
-        }
-    }
-    
-    private var addTaskSheet: some View {
-        NavigationStack {
-            Form {
-                VStack(alignment: .leading, spacing: 10.0) {
-                    Section("Details") {
-                        TextField("Title", text: $viewModel.form.title)
-                            .fontWeight(.regular)
-                        
-                        DatePicker(
-                            "Due Date",
-                            selection: $viewModel.form.dueDate,
-                            displayedComponents: [.date, .hourAndMinute]
-                        )
-                        .fontWeight(.regular)
-                        
-                        Picker("Priority", selection: $viewModel.form.priority) {
-                            ForEach(TaskPriority.allCases, id: \.self) { Text($0.rawValue) }
-                        }
-                        .fontWeight(.regular)
-                    }
-                    .fontWeight(.semibold)
-                    
-                    Section("Tags") {
-                        TextField("Comma-separated tags", text: $viewModel.form.tags)
-                            .fontWeight(.regular)
-                    }
-                    .fontWeight(.semibold)
-                }
-            }
-            .padding(.vertical, 10.0)
-            .padding(.horizontal, 15.0)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") { viewModel.addTask() }
-                }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { viewModel.resetForm() }
-                }
-            }
-            .navigationTitle("New Task")
         }
     }
     
@@ -189,20 +169,37 @@ struct TasksView<ViewModel: TasksViewModel>: View {
             
             Spacer()
             
-            Button {
-                viewModel.deleteTask(task)
-            } label: {
-                Image(systemName: "trash.fill")
-                    .font(.system(size: 13.0, weight: .semibold))
-                    .foregroundColor(.red)
-                    .padding(6.0)
-                    .background(
-                        Circle().fill(Color.red.opacity(0.1))
-                    )
+            HStack(spacing: 5.0) {
+                Button {
+                    viewModel.editTask(task)
+                } label: {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.blue)
+                        .padding(6)
+                        .background(
+                            Circle()
+                                .fill(Color.blue.opacity(0.1))
+                        )
+                }
+                .buttonStyle(.plain)
+                
+                Button {
+                    viewModel.deleteTask(task)
+                } label: {
+                    Image(systemName: "trash.fill")
+                        .font(.system(size: 13.0, weight: .semibold))
+                        .foregroundColor(.red)
+                        .padding(6.0)
+                        .background(
+                            Circle().fill(Color.red.opacity(0.1))
+                        )
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
-        .padding(.vertical, 4.0)
+        .padding(.vertical, 14.0)
+        .padding(.horizontal, 10.0)
     }
     
     private func scrollToTop(proxy: ScrollViewProxy) {

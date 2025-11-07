@@ -2,29 +2,6 @@ import SwiftUI
 import SwiftData
 import Combine
 
-struct TaskFormModel {
-    
-    // MARK: - Internal Properties
-    
-    var title: String = ""
-    var dueDate: Date = .now
-    var priority: TaskPriority = .medium
-    var tags: String = ""
-    
-    // MARK: - Public Methods
-    
-    func toEntity() -> TaskItem {
-        TaskItem(
-            title: title,
-            dueDate: dueDate,
-            priority: priority,
-            tags: tags.split(separator: ",").map {
-                $0.trimmingCharacters(in: .whitespaces)
-            }
-        )
-    }
-}
-
 @MainActor
 final class TasksViewModelImpl: TasksViewModel {
     
@@ -32,10 +9,12 @@ final class TasksViewModelImpl: TasksViewModel {
     
     @Published private(set) var tasks: [TaskItem] = []
     
+    @Published var sortOption: TaskSortOption = .byDate
     @Published var selectedPriority: TaskPriority? = nil
     @Published var tagFilter: String = ""
     
-    @Published var form = TaskFormModel()
+    @Published var currentEditingTask: TaskItem? = nil
+    @Published var form = TaskForm()
     @Published var formHasError = false
     @Published var isAddSheetPresented = false
     
@@ -62,13 +41,25 @@ final class TasksViewModelImpl: TasksViewModel {
         dataSource.insert(newTask)
         resetForm()
     }
+    
+    func editTask(_ task: TaskItem) {
+        currentEditingTask = task
+        form = TaskForm(from: task)
+        isAddSheetPresented = true
+    }
+
+    func updateTask(_ task: TaskItem) {
+        let updated = form.toEntity(existing: task)
+        dataSource.insert(updated)
+        resetForm()
+    }
         
     func deleteTask(_ task: TaskItem) {
         dataSource.delete(task)
     }
         
     func resetForm() {
-        form = TaskFormModel()
+        form = TaskForm()
         isAddSheetPresented = false
     }
     
@@ -80,9 +71,9 @@ final class TasksViewModelImpl: TasksViewModel {
     // MARK: - Private Methods
     
     private func setupBindings() {
-        Publishers.CombineLatest($selectedPriority, $tagFilter)
+        Publishers.CombineLatest3($selectedPriority, $tagFilter, $sortOption)
             .debounce(for: .milliseconds(200), scheduler: RunLoop.main)
-            .sink { [weak self] _, _ in
+            .sink { [weak self] _, _, _ in
                 self?.fetchTasks()
             }
             .store(in: &cancellables)
@@ -109,7 +100,7 @@ final class TasksViewModelImpl: TasksViewModel {
                     $0.priority == selectedPriority
                 }
             }
-                
+                    
             if !tagFilter.isEmpty {
                 fetchedTasks = fetchedTasks.filter {
                     $0.tags.contains {
@@ -118,7 +109,23 @@ final class TasksViewModelImpl: TasksViewModel {
                 }
             }
                 
+            switch sortOption {
+            case .byName:
+                fetchedTasks.sort {
+                    $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+                }
+            case .byDate:
+                fetchedTasks.sort {
+                    ($0.dueDate ?? .distantFuture) < ($1.dueDate ?? .distantFuture)
+                }
+            case .byPriority:
+                fetchedTasks.sort {
+                    $0.priority.sortOrder < $1.priority.sortOrder
+                }
+            }
+
             tasks = fetchedTasks
+                
         case .failure(let error):
             errorMessage = error.description
             showErrorAlert = true
