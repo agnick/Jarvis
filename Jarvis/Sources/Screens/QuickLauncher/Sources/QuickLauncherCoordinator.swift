@@ -48,7 +48,7 @@ final class QuickLauncherCoordinatorImpl<ViewModel: QuickLauncherViewModel>: Qui
         
         setupAnimation()
 
-        jarvisClipThat()
+        // jarvisClipThat()
     }
 
     func closeLauncher(animated: Bool = false) {
