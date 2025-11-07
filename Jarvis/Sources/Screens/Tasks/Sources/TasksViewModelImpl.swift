@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import Combine
 
 struct TaskFormModel {
@@ -46,6 +47,7 @@ final class TasksViewModelImpl: TasksViewModel {
     init(dataSource: TasksLocalDataSource) {
         self.dataSource = dataSource
         setupBindings()
+        setupExternalUpdates()
         fetchTasks()
     }
     
@@ -59,12 +61,10 @@ final class TasksViewModelImpl: TasksViewModel {
         let newTask = form.toEntity()
         dataSource.insert(newTask)
         resetForm()
-        fetchTasks()
     }
         
     func deleteTask(_ task: TaskItem) {
         dataSource.delete(task)
-        fetchTasks()
     }
         
     func resetForm() {
@@ -86,6 +86,18 @@ final class TasksViewModelImpl: TasksViewModel {
                 self?.fetchTasks()
             }
             .store(in: &cancellables)
+    }
+    
+    private func setupExternalUpdates() {
+        NotificationCenter.default.publisher(
+            for: ModelContext.didSave,
+            object: nil
+        )
+        .receive(on: RunLoop.main)
+        .sink { [weak self] _ in
+            self?.fetchTasks()
+        }
+        .store(in: &cancellables)
     }
     
     private func fetchTasks() {

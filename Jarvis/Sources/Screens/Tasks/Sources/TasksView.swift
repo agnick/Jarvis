@@ -158,7 +158,15 @@ struct TasksView<ViewModel: TasksViewModel>: View {
     private func row(_ task: TaskItem) -> some View {
         HStack(spacing: 10.0) {
             VStack(alignment: .leading, spacing: 6.0) {
-                Text(task.title)
+                HStack(spacing: 5.0) {
+                    Text(task.title)
+                        .fontWeight(.medium)
+                        .offset(y: -1.0)
+                    
+                    Circle()
+                        .fill(task.priority.color)
+                        .frame(width: 10.0, height: 10.0)
+                }
                 
                 if let date = task.dueDate {
                     Text("Due: \(date.formatted(date: .abbreviated, time: .shortened))")
@@ -181,26 +189,18 @@ struct TasksView<ViewModel: TasksViewModel>: View {
             
             Spacer()
             
-            VStack(alignment: .trailing, spacing: 6.0) {
-                Circle()
-                    .fill(task.priority.color)
-                    .frame(width: 10.0, height: 10.0)
-                
-                Spacer()
-                
-                Button {
-                    viewModel.deleteTask(task)
-                } label: {
-                    Image(systemName: "trash.fill")
-                        .font(.system(size: 13.0, weight: .semibold))
-                        .foregroundColor(.red)
-                        .padding(6.0)
-                        .background(
-                            Circle().fill(Color.red.opacity(0.1))
-                        )
-                }
-                .buttonStyle(.plain)
+            Button {
+                viewModel.deleteTask(task)
+            } label: {
+                Image(systemName: "trash.fill")
+                    .font(.system(size: 13.0, weight: .semibold))
+                    .foregroundColor(.red)
+                    .padding(6.0)
+                    .background(
+                        Circle().fill(Color.red.opacity(0.1))
+                    )
             }
+            .buttonStyle(.plain)
         }
         .padding(.vertical, 4.0)
     }
