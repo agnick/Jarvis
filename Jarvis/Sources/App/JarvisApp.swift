@@ -17,6 +17,10 @@ struct JarvisApp: App {
                     appServicesFactory.registerClipboardHotkey()
                 }
         }
+        MenuBarExtra("Productivity", systemImage: "bolt.fill") {
+            appServicesFactory.statusBarFactory.makeMenuBarView()
+        }
+        .menuBarExtraStyle(.window)
     }
 
     // MARK: - Private Properties
