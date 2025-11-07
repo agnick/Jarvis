@@ -26,11 +26,6 @@ struct RootTabView: View {
                 .tabItem {
                     Label("Clipboard", systemImage: "doc.on.clipboard")
                 }
-
-            Color.blue
-                .tabItem {
-                    Label("Stats", systemImage: "chart.bar")
-                }
         }
         .tabViewStyle(.automatic)
     }
