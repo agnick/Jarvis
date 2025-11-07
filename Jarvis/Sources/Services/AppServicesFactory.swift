@@ -8,8 +8,8 @@ final class AppServicesFactory: ObservableObject {
     
     lazy var swiftDataContextManager: SwiftDataContextManager = {
         SwiftDataContextManager(models: [
-            // сюда можно добавлять новые модельки
             TaskItem.self,
+            PomodoroTimerSettings.self,
             ClipboardEntry.self
         ])
     }()
