@@ -21,7 +21,12 @@ final class AppServicesFactory: ObservableObject {
         )
 
         let commandHandler = QuickLauncherCommandHandlerImpl(tasksDataSource: tasksDataSource)
-        return QuickLauncherCoordinatorImpl(viewModel: QuickLauncherViewModelImpl(commandHandler: commandHandler))
+        return QuickLauncherCoordinatorImpl(
+            viewModel: QuickLauncherViewModelImpl(
+                commandHandler: commandHandler,
+                clipboardService: clipboardService
+            )
+        )
     }()
     
     // MARK: - Factories

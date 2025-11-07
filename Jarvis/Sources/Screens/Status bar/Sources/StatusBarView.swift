@@ -16,7 +16,7 @@ struct StatusBarView<ViewModel: StatusBarViewModel>: View {
                 actionButton("Open Quick Launcher") {
                     viewModel.openQuickLauncher()
                 }
-                Text("Hotkey: Command ⌘ + Space")
+                Text("Command ⌘ + Option ⌥ + J")
                     .foregroundStyle(.gray)
             }
 

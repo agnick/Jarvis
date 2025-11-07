@@ -12,9 +12,9 @@ final class HotkeyServiceImpl: HotkeyService {
     private var eventHandler: EventHandlerRef?
 
     func registerHotkey(action: @escaping () -> Void) {
-        // Default: Cmd+Space (existing behavior)
-        let modifierFlags: UInt32 = UInt32(cmdKey)
-        let keyCode: UInt32 = UInt32(kVK_Space)
+        // Default: Cmd+Option+J (existing behavior)
+        let modifierFlags: UInt32 = UInt32(cmdKey) | UInt32(optionKey)
+        let keyCode: UInt32 = UInt32(kVK_ANSI_J)
         let signature = OSType("QLCH".fourCharCodeValue)
         registerHotkey(keyCode: keyCode, modifiers: modifierFlags, signature: signature, id: 1, action: action)
     }

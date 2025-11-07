@@ -10,7 +10,7 @@ final class StatusBarViewModelImpl: StatusBarViewModel {
     // MARK: - Public Methods
 
     func openQuickLauncher() {
-        quickLauncherCoordinator.toggleLauncher()
+        quickLauncherCoordinator.openLauncher()
     }
     
     func quitApp() {
