@@ -14,6 +14,16 @@ final class AppServicesFactory: ObservableObject {
         ])
     }()
     
+    lazy var quickLauncherCoordinator: QuickLauncherCoordinator = {
+        let tasksDataSource = TasksLocalDataSourceImpl(
+            container: swiftDataContextManager.container,
+            context: swiftDataContextManager.context
+        )
+
+        let commandHandler = QuickLauncherCommandHandlerImpl(tasksDataSource: tasksDataSource)
+        return QuickLauncherCoordinatorImpl(viewModel: QuickLauncherViewModelImpl(commandHandler: commandHandler))
+    }()
+    
     // MARK: - Factories
     
     lazy var tasksFactory: TasksFactory = {
@@ -23,15 +33,9 @@ final class AppServicesFactory: ObservableObject {
     lazy var hotkeyService: HotkeyService = {
         HotkeyServiceImpl()
     }()
-
-    lazy var quickLauncherCoordinator: QuickLauncherCoordinator = {
-        let tasksDataSource = TasksLocalDataSourceImpl(
-            container: swiftDataContextManager.container,
-            context: swiftDataContextManager.context
-        )
-
-        let commandHandler = QuickLauncherCommandHandlerImpl(tasksDataSource: tasksDataSource)
-        return QuickLauncherCoordinatorImpl(viewModel: QuickLauncherViewModelImpl(commandHandler: commandHandler))
+    
+    lazy var statusBarFactory: StatusBarFactory = {
+        StatusBarFactoryImpl(quickLauncherCoordinator: quickLauncherCoordinator)
     }()
 
     // MARK: - Clipboard stack
