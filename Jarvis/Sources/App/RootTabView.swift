@@ -17,7 +17,7 @@ struct RootTabView: View {
                     Label("Tasks", systemImage: "checklist")
                 }
 
-            Color.red
+            appServicesFactory.pomodoroFactory.makePomodoroScreen()
                 .tabItem {
                     Label("Focus", systemImage: "timer")
                 }

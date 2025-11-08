@@ -17,4 +17,26 @@ final class PomodoroTimerSettings {
         self.longRestDuration = longRestDuration
         self.roundsBeforeLongRest = roundsBeforeLongRest
     }
+
+    func getDuration(for timerType: PomodoroTimerType) -> TimeInterval {
+        switch timerType {
+        case .focus:
+            focusDuration
+        case .rest:
+            restDuration
+        case .longRest:
+            longRestDuration
+        }
+    }
+
+    func updateDuration(for timerType: PomodoroTimerType, value: TimeInterval) {
+        switch timerType {
+        case .focus:
+            focusDuration = value
+        case .rest:
+            restDuration = value
+        case .longRest:
+            longRestDuration = value
+        }
+    }
 }
