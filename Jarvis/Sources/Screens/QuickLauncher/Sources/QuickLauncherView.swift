@@ -5,6 +5,7 @@ protocol QuickLauncherViewModel: ObservableObject {
     var command: String { get set }
     var statusMessage: StatusMessage? { get set }
     var clipboardItems: [String] { get }
+    var isVisible: Bool { get set }
 
     func clearCommand()
     func executeCommand()
@@ -38,7 +39,10 @@ struct QuickLauncherView<ViewModel: QuickLauncherViewModel>: View {
                         isFocused = false
                     }
                     .submitLabel(.search)
-                    .glassEffect(.regular)
+                    .background(
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(Color(nsColor: .textBackgroundColor).opacity(0.77))
+                    )
                 
                 Button {
                     viewModel.clearCommand()
@@ -49,7 +53,6 @@ struct QuickLauncherView<ViewModel: QuickLauncherViewModel>: View {
                         .scaledToFit()
                         .frame(width: 24, height: 24)
                         .foregroundStyle(.secondary)
-                        .glassEffect(.regular)
                 }
                 .buttonStyle(.plain)
                 .contentShape(Rectangle())
@@ -82,7 +85,7 @@ struct QuickLauncherView<ViewModel: QuickLauncherViewModel>: View {
                         .padding(.leading, 4)
                 }
             } else {
-                Color.clear.frame(height: 16)
+                Color.clear.frame(height: 12)
             }
             
             if !viewModel.clipboardItems.isEmpty {
@@ -96,7 +99,10 @@ struct QuickLauncherView<ViewModel: QuickLauncherViewModel>: View {
                                 .lineLimit(1)
                                 .font(.system(size: 12))
                                 .frame(height: 24)
-                                .glassEffect(.regular)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .fill(Color(nsColor: .textBackgroundColor).opacity(0.77))
+                                )
                         }
                         .buttonStyle(.plain)
                     }

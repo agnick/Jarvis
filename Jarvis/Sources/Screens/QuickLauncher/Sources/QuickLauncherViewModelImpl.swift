@@ -4,6 +4,7 @@ final class QuickLauncherViewModelImpl: QuickLauncherViewModel {
     // MARK: - Properties
     @Published var command: String = ""
     @Published var statusMessage: StatusMessage?
+    @Published var isVisible: Bool = true
     
     var clipboardItems: [String] {
         Array(clipboardService.entries.prefix(3))
