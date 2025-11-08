@@ -15,10 +15,13 @@ protocol PomodoroViewModel: ObservableObject {
     var currentTimerLength: TimeInterval { get set }
     var connectedTask: TaskItem? { get }
     var isPaused: Bool { get }
-    
+    var focusSessionsSinceLongRest: Int { get }
+
     func start()
     func pause()
     func reset()
+    func next()
+    func finish()
 }
 
 final class PomodoroViewModelImpl: PomodoroViewModel {
@@ -42,10 +45,10 @@ final class PomodoroViewModelImpl: PomodoroViewModel {
     }
     @Published var currentTime: TimeInterval = 0
     @Published var connectedTask: TaskItem?
-    
     @Published private var settings: PomodoroTimerSettings
     @Published var isPaused: Bool = true
-    
+    @Published var focusSessionsSinceLongRest: Int = 0
+
     // MARK: - Computed Properties
     
     var progress: Double {
@@ -102,7 +105,29 @@ final class PomodoroViewModelImpl: PomodoroViewModel {
         currentTime = currentTimerLength
         isPaused = true
     }
-    
+
+    func next() {
+        if currentTimerType == .focus {
+            if focusSessionsSinceLongRest < 3 {
+                currentTimerType = .rest
+            } else {
+                currentTimerType = .longRest
+                focusSessionsSinceLongRest = 0
+            }
+        } else {
+            currentTimerType = .focus
+            focusSessionsSinceLongRest += 1
+        }
+
+        reset()
+    }
+
+    func finish() {
+        reset()
+        currentTimerType = .focus
+        connectedTask = nil
+    }
+
     deinit {
         timer?.invalidate()
     }

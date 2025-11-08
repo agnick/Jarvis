@@ -21,19 +21,20 @@ struct PomodoroView<ViewModel: PomodoroViewModel>: View {
         VStack {
             ZStack {
                 Text(viewModel.currentTimerType.rawValue)
-                    .font(.system(size: 48, weight: .medium))
+                    .font(.system(size: 36, weight: .medium))
 
-                HStack {
-                    Spacer()
-                    
-                    Button(action: {
-                    }) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.system(size: 36))
-                    }
-                    .buttonStyle(.plain)
-                    .frame(width: 72, height: 72)
-                }
+//                HStack {
+//                    Spacer()
+//                    
+//                    Button(action: {
+//                    }) {
+//                        Image(systemName: "gearshape.fill")
+//                            .font(.system(size: 24))
+//                    }
+//                    .padding(10)
+//                    .buttonStyle(.plain)
+//                    .frame(width: 24, height: 24)
+//                }
             }
 
             CircleCounter
@@ -41,7 +42,11 @@ struct PomodoroView<ViewModel: PomodoroViewModel>: View {
             TimerSelector
 
             TimePicker
+
+            ControlButtons
         }
+        .padding(20)
+        .frame(minWidth: 592, maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     // MARK: - Private Properties
@@ -88,7 +93,6 @@ struct PomodoroView<ViewModel: PomodoroViewModel>: View {
             }
         }
         .frame(width: 400, height: 300)
-        .padding(20)
     }
 
     private var TimerSelector: some View {
@@ -144,9 +148,40 @@ struct PomodoroView<ViewModel: PomodoroViewModel>: View {
                     .font(.system(size: 24))
             }
             Button(action: {
-                viewModel.currentTimerLength = min(viewModel.currentTimerLength + 5 * 60, 99 * 60)
+                viewModel.currentTimerLength = min(viewModel.currentTimerLength + 5 * 60, 100 * 60)
             }) {
                 Image(systemName: "plus")
+                    .font(.system(size: 36))
+            }
+            .buttonStyle(.plain)
+            .frame(width: 72, height: 72)
+        }
+    }
+
+    private var ControlButtons: some View {
+        HStack {
+            Button(action: {
+                viewModel.reset()
+            }) {
+                Image(systemName: "arrow.trianglehead.counterclockwise")
+                    .font(.system(size: 36))
+            }
+            .buttonStyle(.plain)
+            .frame(width: 72, height: 72)
+
+            Button(action: {
+                viewModel.next()
+            }) {
+                Image(systemName: "forward.fill")
+                    .font(.system(size: 36))
+            }
+            .buttonStyle(.plain)
+            .frame(width: 72, height: 72)
+
+            Button(action: {
+                viewModel.finish()
+            }) {
+                Image(systemName: "flag.pattern.checkered")
                     .font(.system(size: 36))
             }
             .buttonStyle(.plain)
