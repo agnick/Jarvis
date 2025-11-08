@@ -9,15 +9,13 @@ protocol QuickLauncherCoordinator {
 
 final class QuickLauncherCoordinatorImpl<ViewModel: QuickLauncherViewModel>: QuickLauncherCoordinator {
     // MARK: - Initialization
-
     init(viewModel: ViewModel) {
         self.viewModel = viewModel
     }
 
     // MARK: - Public
-
     func toggleLauncher() {
-        if let panel, panel.isVisible {
+        if let window, window.isVisible {
             closeLauncher(animated: true)
             return
         }
@@ -25,62 +23,59 @@ final class QuickLauncherCoordinatorImpl<ViewModel: QuickLauncherViewModel>: Qui
     }
     
     func openLauncher() {
-        if let panel, panel.isVisible {
-            return
-        }
-        let view = QuickLauncherView(viewModel: viewModel)
+        if let window, window.isVisible { return }
 
+        let view = QuickLauncherView(viewModel: viewModel)
         let hostingController = NSHostingController(rootView: view)
 
-        let panel = QuickLauncherPanel(contentViewController: hostingController)
-        panel.styleMask = [.borderless, .fullSizeContentView]
-        panel.titlebarAppearsTransparent = true
-        panel.isReleasedWhenClosed = false
-        panel.level = .floating
-        panel.backgroundColor = .clear
-        panel.hasShadow = true
-        panel.makeKeyAndOrderFront(nil)
-        panel.becomesKeyOnlyIfNeeded = false
-        panel.standardWindowButton(.closeButton)?.isHidden = true
-        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        panel.standardWindowButton(.zoomButton)?.isHidden = true
-        panel.onEscPressed = { [weak self] in
-            self?.closeLauncher(animated: true) 
-        }
-        let panelWidth: CGFloat = 650
-        let panelHeight: CGFloat = 256
-        panel.setFrame(NSRect(x: 0, y: 0, width: panelWidth, height: panelHeight), display: true)
-        panel.center()
+        let window = QuickLauncherWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 650, height: 256),
+            styleMask: [.borderless, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentViewController = hostingController
+        window.titlebarAppearsTransparent = true
+        window.isReleasedWhenClosed = false
+        window.backgroundColor = .clear
+        window.isOpaque = false
+        window.hasShadow = true
+        window.level = .screenSaver
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        window.setFrame(NSRect(x: 0, y: 0, width: 650, height: 256), display: true)
+        window.center()
+        window.makeKeyAndOrderFront(nil)
 
-        self.panel = panel
+        // Событие Esc
+        window.onEscPressed = { [weak self] in
+            self?.closeLauncher(animated: true)
+        }
+
+        self.window = window
 
         NSApp.activate(ignoringOtherApps: true)
-        panel.makeKey()
-        
         setupAnimation()
-
-        // jarvisClipThat()
+        jarvisClipThat()
     }
 
     func closeLauncher(animated: Bool = false) {
-        guard let panel else { return }
+        guard let window else { return }
 
         if animated {
-            NSAnimationContext.runAnimationGroup({ context in
+            NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.25
                 context.allowsImplicitAnimation = true
-                panel.animator().alphaValue = 0
-            }, completionHandler: {
-                panel.orderOut(nil)
-            })
+                window.animator().alphaValue = 0
+            } completionHandler: {
+                window.orderOut(nil)
+            }
         } else {
-            panel.orderOut(nil)
+            window.orderOut(nil)
         }
     }
 
     // MARK: - Private Properties
-
-    private var panel: NSPanel?
+    private var window: QuickLauncherWindow?
     private let viewModel: ViewModel
     private var player: AVAudioPlayer?
     
@@ -99,20 +94,20 @@ final class QuickLauncherCoordinatorImpl<ViewModel: QuickLauncherViewModel>: Qui
             print("Ошибка воспроизведения: \(error)")
         }
     }
-    
-    private func setupAnimation() {
-        guard let panel else { return }
-        panel.alphaValue = 0
 
+    private func setupAnimation() {
+        guard let window else { return }
+        window.alphaValue = 0
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.25
             context.allowsImplicitAnimation = true
-            panel.animator().alphaValue = 1
+            window.animator().alphaValue = 1
         }
     }
 }
 
-final class QuickLauncherPanel: NSPanel {
+// MARK: - Custom NSWindow
+final class QuickLauncherWindow: NSWindow {
     var onEscPressed: (() -> Void)?
 
     override var canBecomeKey: Bool { true }
@@ -122,4 +117,3 @@ final class QuickLauncherPanel: NSPanel {
         onEscPressed?()
     }
 }
-
