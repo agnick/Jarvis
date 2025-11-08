@@ -5,55 +5,111 @@
 //  Created by тимур on 04.11.2025.
 //
 import SwiftUI
+import Foundation
 
 @MainActor
 protocol PomodoroViewModel: ObservableObject {
+    var progress: Double { get }
     var timeString: String { get }
-    var timerProgress: Double { get }
     var currentTimerType: PomodoroTimerType { get set }
-    var currentTask: TaskItem? { get }
-    func startTimer()
-}
-
-enum PomodoroTimerType {
-    case focus
-    case rest
-    case longRest
+    var currentTimerLength: TimeInterval { get set }
+    var connectedTask: TaskItem? { get }
+    var isPaused: Bool { get }
+    
+    func start()
+    func pause()
+    func reset()
 }
 
 final class PomodoroViewModelImpl: PomodoroViewModel {
-    @Published var secondsRemaining: Int = 30
-    @Published var timeString: String = "25:00"
-    @Published var currentTimerType: PomodoroTimerType = .focus
-    @Published var currentTask: TaskItem? = nil
 
-    var timerProgress: Double {
-        max(0, min(1, Double(secondsRemaining) / 30))
-    }
-
-    private var timer: Timer?
+    // MARK: - Published Properties
     
-    func startTimer() {
+    @Published var currentTimerType: PomodoroTimerType {
+        didSet {
+            currentTimerLength = settings.getDuration(for: currentTimerType)
+            currentTime = currentTimerLength
+            reset()
+        }
+    }
+    @Published var currentTimerLength: TimeInterval = 0 {
+        didSet {
+            settings.updateDuration(for: currentTimerType, value: currentTimerLength)
+            settingsSource.saveSettings(settings)
+            currentTime = currentTimerLength
+            reset()
+        }
+    }
+    @Published var currentTime: TimeInterval = 0
+    @Published var connectedTask: TaskItem?
+    
+    @Published private var settings: PomodoroTimerSettings
+    @Published var isPaused: Bool = true
+    
+    // MARK: - Computed Properties
+    
+    var progress: Double {
+        Double(currentTime) / Double(currentTimerLength)
+    }
+    
+    var timeString: String {
+        let minutesLeft = Int(currentTime / 60)
+        let secondsLeft = Int(currentTime.truncatingRemainder(dividingBy: 60))
+        return String(format: "%02d:%02d", minutesLeft, secondsLeft)
+    }
+    
+    // MARK: - Private Properties
+    
+    private var timer: Timer?
+    private let settingsSource: PomodoroSettingsLocalDataSource
+
+    // MARK: - Init
+    
+    init(settingsSource: PomodoroSettingsLocalDataSource) {
+        self.settingsSource = settingsSource
+        let loadedSettings = settingsSource.fetchSettings() ?? PomodoroTimerSettings()
+        self.settings = loadedSettings
+        self.currentTimerType = .focus
+    }
+    
+    // MARK: - Public Methods
+    
+    func start() {
         timer?.invalidate()
-        updateTimeString()
+        isPaused = false
+        
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             Task { @MainActor in
-                if self.secondsRemaining > 0 {
-                    self.secondsRemaining -= 1
-                    self.updateTimeString()
+                if self.currentTime > 0 {
+                    self.currentTime -= 1
                 } else {
                     self.timer?.invalidate()
-                    self.timer = nil
+                    self.isPaused = true
+                    self.currentTime = self.currentTimerLength
                 }
             }
         }
     }
     
-    private func updateTimeString() {
-        let minutes = secondsRemaining / 60
-        let seconds = secondsRemaining % 60
-        timeString = String(format: "%02d:%02d", minutes, seconds)
+    func pause() {
+        timer?.invalidate()
+        isPaused = true
+    }
+    
+    func reset() {
+        timer?.invalidate()
+        currentTime = currentTimerLength
+        isPaused = true
+    }
+    
+    deinit {
+        timer?.invalidate()
     }
 }
 
+enum PomodoroTimerType: String {
+    case focus = "Focus"
+    case rest = "Rest"
+    case longRest = "Long Rest"
+}
